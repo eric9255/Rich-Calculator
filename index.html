@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>全能投資儀表板 (Dividend Pro)</title>
+    
+    <!-- 引入核心庫 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root { --primary-bg: #f8f9fa; --sidebar-bg: #ffffff; --card-bg: #ffffff; --text-main: #2c3e50; }
+        body { background-color: var(--primary-bg); font-family: 'Noto Sans TC', sans-serif; color: var(--text-main); }
+        
+        .sidebar { background: var(--sidebar-bg); border-right: 1px solid #e9ecef; height: 100vh; padding: 25px 20px; overflow-y: auto; position: sticky; top: 0; z-index: 1000; }
+        .sidebar-title { font-weight: 800; color: #34495e; letter-spacing: 1px; margin-bottom: 30px; }
+        
+        .main-content { padding: 30px; }
+        
+        .kpi-card { background: var(--card-bg); border-radius: 16px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); height: 100%; border: none; display: flex; flex-direction: column; justify-content: center; }
+        .kpi-label { font-size: 0.85rem; color: #95a5a6; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+        .kpi-value { font-size: 1.8rem; font-weight: 800; color: #2c3e50; margin-top: 5px; }
+        
+        .heatmap-container { height: 100%; min-height: 400px; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.03); }
+        
+        .table-container { background: white; border-radius: 16px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); overflow-x: auto; }
+        .table { min-width: 1300px; margin-bottom: 0; } /* 加寬以容納新欄位 */
+        .table thead th { background-color: #f8f9fa; border-bottom: 2px solid #e9ecef; color: #7f8c8d; font-size: 0.9rem; padding: 15px; }
+        .table td { vertical-align: middle; padding: 15px; font-weight: 500; font-size: 0.95rem; }
+        .trend-col { background-color: #fcfcfc !important; border-left: 2px solid #f1f1f1; }
+        
+        /* 標籤樣式 */
+        .badge-type { background-color: #eef2f7; color: #34495e; padding: 5px 10px; border-radius: 6px; font-size: 0.8rem; }
+        
+        /* 頻率標籤顏色 */
+        .badge-freq-m { background-color: #ffebee; color: #c62828; border: 1px solid #ffcdd2; } /* 月配-紅 */
+        .badge-freq-q { background-color: #e3f2fd; color: #1565c0; border: 1px solid #bbdefb; } /* 季配-藍 */
+        .badge-freq-y { background-color: #f5f5f5; color: #616161; border: 1px solid #e0e0e0; } /* 年配-灰 */
+
+        @media (max-width: 768px) {
+            .sidebar { height: auto; position: relative; border-right: none; border-bottom: 1px solid #e9ecef; padding-bottom: 20px; }
+            .main-content { padding: 15px; }
+            .kpi-value { font-size: 1.5rem; }
+            .heatmap-container { min-height: 350px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container-fluid">
+    <div class="row">
+        <!-- 左側控制面板 -->
+        <div class="col-lg-2 sidebar">
+            <h5 class="sidebar-title">📊 智能投資 Pro</h5>
+            
+            <div class="mb-4">
+                <label class="form-label small text-muted fw-bold">Google CSV 連結</label>
+                <div class="input-group input-group-sm">
+                    <input type="text" class="form-control" id="sheetUrl" placeholder="貼上網址...">
+                </div>
+            </div>
+            <button class="btn btn-primary btn-sm w-100 mb-4 shadow-sm" onclick="loadData()">📥 讀取數據</button>
+
+            <hr class="text-muted">
+            <h6 class="fw-bold text-muted small mb-3">🔮 資產模擬器</h6>
+            <div class="mb-2">
+                <label class="small text-muted">每月投入 (TWD)</label>
+                <input type="number" id="monthlyContribute" class="form-control form-control-sm" value="10000">
+            </div>
+            <div class="mb-2">
+                <label class="small text-muted">預期年化報酬 (%)</label>
+                <input type="number" id="annualReturn" class="form-control form-control-sm" value="8">
+            </div>
+            <div class="mb-3">
+                <label class="small text-muted">預測年限: <span id="yearLabel">20</span> 年</label>
+                <input type="range" class="form-range" id="forecastYears" min="5" max="40" value="20" oninput="updateYearLabel(this.value)">
+            </div>
+            <button class="btn btn-success btn-sm w-100 shadow-sm" onclick="calculateProjection()">🔄 更新預測</button>
+
+            <div class="mt-5">
+                <h6 class="fw-bold text-muted small mb-2">📉 VIX 恐慌指數</h6>
+                <div class="tradingview-widget-container shadow-sm" style="border-radius: 10px; overflow: hidden;">
+                    <div class="tradingview-widget-container__widget"></div>
+                    <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-mini-symbol-overview.js" async>
+                    {
+                    "symbol": "CBOE:VIX",
+                    "width": "100%",
+                    "height": 180,
+                    "locale": "zh_TW",
+                    "dateRange": "12M",
+                    "colorTheme": "light",
+                    "isTransparent": false,
+                    "autosize": false
+                    }
+                    </script>
+                </div>
+            </div>
+        </div>
+
+        <!-- 右側主視圖 -->
+        <div class="col-lg-10 main-content">
+            
+            <!-- KPI -->
+            <div class="row g-3 mb-4">
+                <div class="col-6 col-md-3"><div class="kpi-card"><div class="kpi-label">總資產市值 (TWD)</div><div class="kpi-value" id="totalAssets">0</div></div></div>
+                <div class="col-6 col-md-3"><div class="kpi-card"><div class="kpi-label">總投入成本</div><div class="kpi-value" id="totalCost">0</div></div></div>
+                <div class="col-6 col-md-3"><div class="kpi-card"><div class="kpi-label">未實現損益</div><div class="kpi-value" id="totalProfit">0</div><div class="kpi-sub" id="profitPct">0%</div></div></div>
+                <div class="col-6 col-md-3"><div class="kpi-card" style="border-left: 4px solid #f1c40f;"><div class="kpi-label">預估年股息 (Passive Income)</div><div class="kpi-value" id="totalDividend">0</div><div class="small text-muted mt-1">平均殖利率: <span id="avgYield">0</span>%</div></div></div>
+            </div>
+
+            <!-- 圖表 -->
+            <div class="row g-3 mb-4">
+                <div class="col-md-5">
+                    <div class="kpi-card" style="display: block;">
+                        <h6 class="fw-bold mb-3 text-muted">🍰 資產配置 (Sector Allocation)</h6>
+                        <div style="height: 250px; position: relative;"><canvas id="allocationChart"></canvas></div>
+                    </div>
+                </div>
+                <div class="col-md-7">
+                    <div class="heatmap-container">
+                        <div class="tradingview-widget-container">
+                            <div class="tradingview-widget-container__widget"></div>
+                            <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-stock-heatmap.js" async>
+                            {"exchanges":[],"dataSource":"SPX500","grouping":"sector","blockSize":"market_cap_basic","blockColor":"change","locale":"zh_TW","symbolUrl":"","colorTheme":"light","hasTopBar":false,"isTransparent":true,"width":"100%","height":"100%"}
+                            </script>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabs -->
+            <ul class="nav nav-tabs mb-3" id="myTab" role="tablist">
+                <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#portfolio">📊 持股明細</button></li>
+                <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#forecast">🔮 成長預測</button></li>
+                <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#news">📰 新聞</button></li>
+            </ul>
+
+            <div class="tab-content">
+                <div class="tab-pane fade show active" id="portfolio">
+                    <div class="table-container">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>代碼</th>
+                                    <th>分類</th>
+                                    <th>配息</th> <!-- 新欄位標題 -->
+                                    <th>現價</th>
+                                    <th>市值 (TWD)</th>
+                                    <th>損益</th>
+                                    <th>持有年化%</th>
+                                    <th>殖利率%</th>
+                                    <th>預估股息</th>
+                                    <th class="trend-col">3年</th>
+                                    <th class="trend-col">5年</th>
+                                    <th class="trend-col">10年</th>
+                                </tr>
+                            </thead>
+                            <tbody id="portfolioTableBody">
+                                <tr><td colspan="12" class="text-center text-muted py-5">請輸入 CSV 網址並點擊「讀取數據」</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="forecast">
+                    <div class="kpi-card" style="display: block;"><canvas id="predictionChart" style="height: 400px; width: 100%;"></canvas></div>
+                </div>
+
+                <div class="tab-pane fade" id="news">
+                    <div class="kpi-card p-0 overflow-hidden">
+                         <div class="tradingview-widget-container">
+                            <div class="tradingview-widget-container__widget"></div>
+                            <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-timeline.js" async>
+                            {"feedMode": "all_symbols", "colorTheme": "light", "isTransparent": true, "displayMode": "regular", "width": "100%", "height": "600", "locale": "zh_TW"}
+                            </script>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    let currentTotalAssets = 0;
+    let chartInstance = null;
+    let pieChartInstance = null;
+
+    window.onload = function() {
+        const savedUrl = localStorage.getItem('sheetUrl');
+        if (savedUrl) { document.getElementById('sheetUrl').value = savedUrl; loadData(); }
+    }
+    function updateYearLabel(val) { document.getElementById('yearLabel').innerText = val; }
+
+    function loadData() {
+        const url = document.getElementById('sheetUrl').value.trim();
+        if (!url) { alert("請輸入 Google CSV 網址"); return; }
+        localStorage.setItem('sheetUrl', url);
+        
+        Papa.parse(url, {
+            download: true, header: true, skipEmptyLines: true,
+            complete: function(results) { processPortfolio(results.data); },
+            error: function(err) { alert("讀取失敗"); }
+        });
+    }
+
+    function processPortfolio(data) {
+        const tbody = document.getElementById('portfolioTableBody');
+        tbody.innerHTML = "";
+        
+        let totalMkt = 0, totalCst = 0, totalDiv = 0;
+        let categories = {};
+
+        data.forEach(row => {
+            if(row['Code']) {
+                const mkVal = parseNum(row['MarketVal']);
+                const prof = parseNum(row['Profit']);
+                const myAnnual = parsePct(row['Annualized']);
+                const yieldPct = parseNum(row['Yield']);
+                const type = row['Type'] || '其他';
+                // 讀取配息頻率，預設為年配
+                const freq = row['Freq'] ? row['Freq'].trim() : '年'; 
+                
+                const estDiv = mkVal * (yieldPct / 100);
+                const r3y = parsePct(row['Return3Y']);
+                const r5y = parsePct(row['Return5Y']);
+                const r10y = parsePct(row['Return10Y']);
+
+                totalMkt += mkVal;
+                totalCst += (mkVal - prof);
+                totalDiv += estDiv;
+
+                if(categories[type]) categories[type] += mkVal;
+                else categories[type] = mkVal;
+
+                // 決定配息標籤顏色
+                let freqBadgeClass = 'badge-freq-y'; // 預設灰色
+                if (freq.includes('月')) freqBadgeClass = 'badge-freq-m';
+                else if (freq.includes('季')) freqBadgeClass = 'badge-freq-q';
+
+                const tr = `
+                    <tr>
+                        <td class="fw-bold text-primary">${row['Code']}</td>
+                        <td><span class="badge-type">${type}</span></td>
+                        <td><span class="badge ${freqBadgeClass}">${freq}</span></td> <!-- 新增：頻率標籤 -->
+                        <td>${parseFloat(row['Price']).toFixed(2)}</td>
+                        <td class="fw-bold">${Math.round(mkVal).toLocaleString()}</td>
+                        <td class="${getColor(prof)}">${Math.round(prof).toLocaleString()}</td>
+                        <td class="${getColor(myAnnual)} fw-bold">${formatPct(myAnnual)}</td>
+                        <td>${yieldPct.toFixed(2)}%</td>
+                        <td class="text-warning fw-bold">${Math.round(estDiv).toLocaleString()}</td>
+                        <td class="trend-col ${getColor(r3y)}">${formatPct(r3y)}</td>
+                        <td class="trend-col ${getColor(r5y)}">${formatPct(r5y)}</td>
+                        <td class="trend-col ${getColor(r10y)}">${formatPct(r10y)}</td>
+                    </tr>
+                `;
+                tbody.innerHTML += tr;
+            }
+        });
+
+        currentTotalAssets = totalMkt;
+        document.getElementById('totalAssets').innerText = Math.round(totalMkt).toLocaleString();
+        document.getElementById('totalCost').innerText = Math.round(totalCst).toLocaleString();
+        
+        const tp = totalMkt - totalCst;
+        const tpPct = totalCst > 0 ? (tp / totalCst * 100) : 0;
+        
+        const profitEl = document.getElementById('totalProfit');
+        profitEl.innerText = Math.round(tp).toLocaleString();
+        profitEl.style.color = tp >= 0 ? '#198754' : '#e74c3c';
+        
+        const profitPctEl = document.getElementById('profitPct');
+        profitPctEl.innerText = (tp >= 0 ? '+' : '') + tpPct.toFixed(2) + '%';
+        profitPctEl.style.color = tp >= 0 ? '#198754' : '#e74c3c';
+
+        document.getElementById('totalDividend').innerText = Math.round(totalDiv).toLocaleString();
+        const avgYield = totalMkt > 0 ? (totalDiv / totalMkt * 100) : 0;
+        document.getElementById('avgYield').innerText = avgYield.toFixed(2);
+
+        renderPieChart(categories);
+        calculateProjection();
+    }
+
+    function renderPieChart(categories) {
+        const ctx = document.getElementById('allocationChart').getContext('2d');
+        if(pieChartInstance) pieChartInstance.destroy();
+        pieChartInstance = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: Object.keys(categories),
+                datasets: [{
+                    data: Object.values(categories),
+                    backgroundColor: ['#3498db', '#2ecc71', '#9b59b6', '#f1c40f', '#e74c3c', '#34495e', '#1abc9c'],
+                    borderWidth: 0
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
+        });
+    }
+
+    function parseNum(v) { return parseFloat(String(v).replace(/,/g,'')) || 0; }
+    function parsePct(v) { 
+        if(v === null || v === undefined || v === "" || v === "-") return null; 
+        let s = String(v);
+        let n = parseFloat(s.replace('%',''));
+        return s.includes('%') ? n : n * 100;
+    }
+    function formatPct(v) { return v === null ? '-' : v.toFixed(2) + '%'; }
+    function getColor(v) { if(v===null) return ''; return v >= 0 ? 'text-success' : 'text-danger'; }
+
+    function calculateProjection() {
+        const monthly = parseFloat(document.getElementById('monthlyContribute').value)||0;
+        const rate = (parseFloat(document.getElementById('annualReturn').value)||0)/100;
+        const years = parseInt(document.getElementById('forecastYears').value)||20;
+        let labels=[], data=[], pv=currentTotalAssets||10000;
+        
+        for(let i=0; i<=years; i++){
+            labels.push(i+'年');
+            let fv = 0;
+            if (rate !== 0) fv = pv * Math.pow(1+rate, i) + (monthly*12)*((Math.pow(1+rate,i)-1)/rate);
+            else fv = pv + (monthly * 12 * i);
+            data.push(Math.round(fv));
+        }
+        
+        const ctx = document.getElementById('predictionChart').getContext('2d');
+        if(chartInstance) chartInstance.destroy();
+        chartInstance = new Chart(ctx, {
+            type: 'line',
+            data: { 
+                labels: labels, 
+                datasets: [{ 
+                    label: '資產累積預測', 
+                    data: data, 
+                    borderColor: '#2980b9', backgroundColor: 'rgba(52, 152, 219, 0.1)', 
+                    fill:true, tension: 0.4, pointRadius: 2
+                }] 
+            },
+            options: { responsive:true, maintainAspectRatio:false, plugins:{ legend:{display:false} } }
+        });
+    }
+</script>
+</body>
+</html>
