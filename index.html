@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Investment Command Center</title>
+    <title>Taiwan Investment Command Center</title>
     
     <!-- 核心套件 -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -65,26 +65,44 @@
             .sidebar { transform: translateX(-100%); width: 280px; top: 0; height: 100%; z-index: 1050; }
             .sidebar.show { transform: translateX(0); }
             .main-wrapper { margin-left: 0; padding: 15px; margin-top: 50px; }
-            .ticker-tape { top: 50px; } /* 手機版把跑馬燈往下移或隱藏 */
+            .ticker-tape { top: 50px; }
             .mobile-nav { display: flex !important; }
         }
         .mobile-nav { display: none; height: 50px; background: var(--bg-card); position: fixed; top: 0; width: 100%; z-index: 1040; align-items: center; padding: 0 15px; border-bottom: 1px solid rgba(128,128,128,0.1); }
+        
+        /* 外部連結按鈕 */
+        .news-btn { text-decoration: none; color: inherit; transition: 0.2s; }
+        .news-btn:hover { opacity: 0.8; transform: translateY(-2px); }
     </style>
 </head>
 <body>
 
 <!-- 手機版導航列 -->
 <div class="mobile-nav justify-content-between">
-    <span class="fw-bold">🚀 戰情室</span>
+    <span class="fw-bold">🇹🇼 台股戰情室</span>
     <button class="btn btn-sm btn-outline-secondary" onclick="toggleSidebar()"><i class="bi bi-list"></i></button>
 </div>
 
-<!-- 頂部跑馬燈 (TradingView) -->
+<!-- 頂部跑馬燈 (台股優先) -->
 <div class="ticker-tape d-none d-md-block">
     <div class="tradingview-widget-container">
         <div class="tradingview-widget-container__widget"></div>
         <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js" async>
-        {"symbols":[{"proName":"FOREXCOM:SPXUSD","title":"S&P 500"},{"proName":"FOREXCOM:NSXUSD","title":"Nasdaq 100"},{"proName":"FX_IDC:USDTWD","title":"USD/TWD"},{"proName":"BITSTAMP:BTCUSD","title":"Bitcoin"},{"proName":"TWSE:2330","title":"TSMC"}],"showSymbolLogo":true,"colorTheme":"light","isTransparent":false,"displayMode":"adaptive","locale":"zh_TW"}
+        {
+        "symbols":[
+            {"proName":"TWSE:TAIEX","title":"台灣加權指數"},
+            {"proName":"TWSE:TPEX","title":"櫃買指數"},
+            {"proName":"TWSE:2330","title":"台積電"},
+            {"proName":"FX_IDC:USDTWD","title":"USD/TWD"},
+            {"proName":"FOREXCOM:SPXUSD","title":"S&P 500"},
+            {"proName":"FOREXCOM:NSXUSD","title":"Nasdaq 100"}
+        ],
+        "showSymbolLogo":true,
+        "colorTheme":"light",
+        "isTransparent":false,
+        "displayMode":"adaptive",
+        "locale":"zh_TW"
+        }
         </script>
     </div>
 </div>
@@ -110,7 +128,7 @@
     <hr>
     
     <!-- 財富自由目標設定 -->
-    <h6 class="fw-bold text-muted small">🎯 財富自由目標 (FIRE Goal)</h6>
+    <h6 class="fw-bold text-muted small">🎯 財富自由目標 (FIRE)</h6>
     <div class="mb-2">
         <label class="small text-muted">目標金額 (TWD)</label>
         <input type="number" id="fireGoal" class="form-control form-control-sm" value="20000000" onchange="updateFireProgress()">
@@ -134,7 +152,7 @@
     <button class="btn btn-success btn-sm w-100 mb-4" onclick="calculateProjection()">推演資產走勢</button>
 
     <!-- 總經日曆 Widget -->
-    <h6 class="fw-bold text-muted small">📅 財經日曆</h6>
+    <h6 class="fw-bold text-muted small">📅 全球財經日曆</h6>
     <div class="tradingview-widget-container" style="height: 300px; overflow: hidden; border-radius: 8px;">
         <div class="tradingview-widget-container__widget"></div>
         <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-events.js" async>
@@ -221,8 +239,8 @@
     <div class="pro-card mb-4">
         <ul class="nav nav-tabs mb-3" id="myTab">
             <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#portfolio">📊 持股監控</button></li>
-            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#heatmap">🔥 市場熱力圖</button></li>
-            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#news">📰 國際快訊</button></li>
+            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#heatmap">🔥 台股/美股熱力圖</button></li>
+            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#news">📰 台股新聞</button></li>
         </ul>
         
         <div class="tab-content">
@@ -261,11 +279,33 @@
             </div>
 
             <div class="tab-pane fade" id="news">
+                <!-- 快捷按鈕區 -->
+                <div class="d-flex gap-2 mb-3 overflow-auto">
+                    <a href="https://tw.stock.yahoo.com/news/" target="_blank" class="btn btn-sm btn-outline-primary rounded-pill px-3">
+                        <i class="bi bi-newspaper"></i> Yahoo股市
+                    </a>
+                    <a href="https://news.cnyes.com/news/cat/tw_stock" target="_blank" class="btn btn-sm btn-outline-danger rounded-pill px-3">
+                        <i class="bi bi-graph-up"></i> 鉅亨網台股
+                    </a>
+                    <a href="https://money.udn.com/money/index" target="_blank" class="btn btn-sm btn-outline-success rounded-pill px-3">
+                        <i class="bi bi-currency-dollar"></i> 經濟日報
+                    </a>
+                </div>
+
                 <div style="height: 500px;">
                     <div class="tradingview-widget-container">
                         <div class="tradingview-widget-container__widget"></div>
                         <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-timeline.js" async>
-                        {"feedMode":"all_symbols","colorTheme":"light","isTransparent":true,"displayMode":"regular","width":"100%","height":"100%","locale":"zh_TW"}
+                        {
+                            "feedMode": "symbol",
+                            "symbol": "TWSE:TAIEX",
+                            "colorTheme": "light",
+                            "isTransparent": true,
+                            "displayMode": "regular",
+                            "width": "100%",
+                            "height": "100%",
+                            "locale": "zh_TW"
+                        }
                         </script>
                     </div>
                 </div>
