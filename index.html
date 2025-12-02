@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Taiwan Investment Command Center</title>
+    <title>Taiwan Investment Command Center (Pro)</title>
     
     <!-- 核心套件 -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -19,85 +19,96 @@
         [data-bs-theme="dark"] {
             --bg-body: #0f172a; --bg-card: #1e293b; --text-primary: #e2e8f0; --accent-color: #3b82f6;
         }
-        body { background-color: var(--bg-body); color: var(--text-primary); font-family: 'Noto Sans TC', sans-serif; transition: 0.3s; }
-        .ticker-tape { height: 50px; width: 100%; position: fixed; top: 0; z-index: 1030; }
-        .sidebar { width: var(--sidebar-width); height: 100vh; position: fixed; top: 50px; left: 0; background: var(--bg-card); border-right: 1px solid rgba(128,128,128,0.1); padding: 20px; overflow-y: auto; z-index: 1020; transition: 0.3s; }
-        .main-wrapper { margin-left: var(--sidebar-width); margin-top: 50px; padding: 25px; transition: 0.3s; }
+        body { background-color: var(--bg-body); color: var(--text-primary); font-family: 'Noto Sans TC', sans-serif; transition: 0.3s; padding-top: 50px; }
+        
+        /* 跑馬燈 */
+        .ticker-tape { height: 50px; width: 100%; position: fixed; top: 0; left: 0; z-index: 1030; }
+        
+        /* 側邊欄 */
+        .sidebar { width: var(--sidebar-width); height: calc(100vh - 50px); position: fixed; top: 50px; left: 0; background: var(--bg-card); border-right: 1px solid rgba(128,128,128,0.1); padding: 20px; overflow-y: auto; z-index: 1020; transition: 0.3s; }
+        
+        /* 主畫面 */
+        .main-wrapper { margin-left: var(--sidebar-width); padding: 25px; transition: 0.3s; }
+        
+        /* 卡片與元件 */
         .pro-card { background: var(--bg-card); border-radius: 12px; padding: 20px; border: 1px solid rgba(128,128,128,0.1); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); height: 100%; }
         .mono-font { font-family: 'JetBrains Mono', monospace; letter-spacing: -0.5px; }
         .progress-bar { transition: width 1.5s ease-in-out; }
+        
+        /* 手機適配 */
         @media (max-width: 768px) {
-            .sidebar { transform: translateX(-100%); width: 280px; top: 0; height: 100%; z-index: 1050; }
+            .sidebar { transform: translateX(-100%); width: 280px; height: 100%; top: 0; z-index: 1050; }
             .sidebar.show { transform: translateX(0); }
-            .main-wrapper { margin-left: 0; padding: 15px; margin-top: 50px; }
-            .ticker-tape { top: 50px; }
-            .mobile-nav { display: flex !important; }
+            .main-wrapper { margin-left: 0; padding: 15px; padding-top: 20px; } /* 修正手機頂部間距 */
+            .ticker-tape { display: none; } /* 手機版隱藏跑馬燈以節省空間 */
+            body { padding-top: 50px; }
+            .mobile-header { display: flex !important; }
         }
-        .mobile-nav { display: none; height: 50px; background: var(--bg-card); position: fixed; top: 0; width: 100%; z-index: 1040; align-items: center; padding: 0 15px; border-bottom: 1px solid rgba(128,128,128,0.1); }
-        .news-btn { text-decoration: none; color: inherit; transition: 0.2s; }
-        .news-btn:hover { opacity: 0.8; transform: translateY(-2px); }
+        .mobile-header { display: none; height: 50px; background: var(--bg-card); position: fixed; top: 0; left: 0; width: 100%; z-index: 1040; align-items: center; padding: 0 15px; border-bottom: 1px solid rgba(128,128,128,0.1); }
+        
+        /* 按鈕群組 */
+        .channel-btn { border-radius: 20px; padding: 5px 15px; font-size: 0.9rem; transition: 0.2s; border: 1px solid rgba(128,128,128,0.2); background: var(--bg-card); color: var(--text-primary); margin-right: 5px; margin-bottom: 5px; }
+        .channel-btn:hover, .channel-btn.active { background: var(--accent-color); color: white; border-color: var(--accent-color); }
     </style>
 </head>
 <body>
 
-<div class="mobile-nav justify-content-between">
-    <span class="fw-bold">🇹🇼 台股戰情室</span>
+<!-- 手機版 Header -->
+<div class="mobile-header justify-content-between">
+    <span class="fw-bold"><i class="bi bi-graph-up"></i> 台股戰情室</span>
     <button class="btn btn-sm btn-outline-secondary" onclick="toggleSidebar()"><i class="bi bi-list"></i></button>
 </div>
 
-<!-- 修正跑馬燈：改用 TVC 數據源，解決紅色驚嘆號問題 -->
+<!-- 電腦版跑馬燈 (已加入鴻海) -->
 <div class="ticker-tape d-none d-md-block">
     <div class="tradingview-widget-container">
         <div class="tradingview-widget-container__widget"></div>
         <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js" async>
         {
-        "symbols":[
-            {"proName":"TVC:TAIEX","title":"台灣加權指數"},
-            {"proName":"TVC:TPEX","title":"櫃買指數"},
-            {"proName":"TWSE:2330","title":"台積電"},
-            {"proName":"FX_IDC:USDTWD","title":"USD/TWD"},
-            {"proName":"FOREXCOM:SPXUSD","title":"S&P 500"},
-            {"proName":"FOREXCOM:NSXUSD","title":"Nasdaq 100"}
+        "symbols": [
+            {"proName": "TWSE:0050", "title": "台灣50"},
+            {"proName": "TWSE:2330", "title": "台積電"},
+            {"proName": "TWSE:2317", "title": "鴻海"},
+            {"proName": "TWSE:2454", "title": "聯發科"},
+            {"proName": "FX_IDC:USDTWD", "title": "美元/台幣"},
+            {"proName": "FOREXCOM:SPXUSD", "title": "S&P 500"}
         ],
-        "showSymbolLogo":true,
-        "colorTheme":"light",
-        "isTransparent":false,
-        "displayMode":"adaptive",
-        "locale":"zh_TW"
+        "showSymbolLogo": true, "colorTheme": "light", "isTransparent": false, "displayMode": "adaptive", "locale": "zh_TW"
         }
         </script>
     </div>
 </div>
 
+<!-- 左側側邊欄 -->
 <div class="sidebar" id="sidebar">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h5 class="fw-bold mb-0">🎛️ 控制中心</h5>
         <button class="btn btn-sm btn-outline-secondary d-md-none" onclick="toggleSidebar()">✕</button>
     </div>
     
-    <button class="btn btn-outline-primary w-100 mb-4" onclick="toggleTheme()"><i class="bi bi-moon-stars-fill"></i> 切換深色模式</button>
+    <button class="btn btn-outline-primary w-100 mb-4" onclick="toggleTheme()"><i class="bi bi-moon-stars-fill"></i> 深色模式</button>
 
     <div class="mb-3">
-        <label class="form-label small text-muted fw-bold">數據來源 (CSV URL)</label>
+        <label class="form-label small text-muted fw-bold">Google CSV 網址</label>
         <input type="text" class="form-control form-control-sm" id="sheetUrl">
     </div>
-    <button class="btn btn-primary btn-sm w-100 mb-4" onclick="loadData()">📥 更新戰情數據</button>
+    <button class="btn btn-primary btn-sm w-100 mb-4" onclick="loadData()">📥 更新數據</button>
 
     <hr>
-    <h6 class="fw-bold text-muted small">🎯 財富自由目標 (FIRE)</h6>
+    <h6 class="fw-bold text-muted small">🎯 FIRE 財富自由</h6>
     <div class="mb-2"><label class="small text-muted">目標金額</label><input type="number" id="fireGoal" class="form-control form-control-sm" value="20000000" onchange="updateFireProgress()"></div>
-    <div class="progress mb-2" style="height: 10px;"><div id="fireProgressBar" class="progress-bar bg-success" style="width: 0%"></div></div>
+    <div class="progress mb-2" style="height: 8px;"><div id="fireProgressBar" class="progress-bar bg-success" style="width: 0%"></div></div>
     <div class="d-flex justify-content-between small"><span class="text-muted">進度</span><span class="fw-bold" id="firePercent">0%</span></div>
 
     <hr>
-    <h6 class="fw-bold text-muted small">🔮 未來推演</h6>
+    <h6 class="fw-bold text-muted small">🔮 資產推演</h6>
     <div class="row g-2 mb-2">
         <div class="col-6"><label class="small text-muted">月投</label><input type="number" id="monthlyContribute" class="form-control form-control-sm" value="10000"></div>
         <div class="col-6"><label class="small text-muted">報酬%</label><input type="number" id="annualReturn" class="form-control form-control-sm" value="8"></div>
     </div>
-    <button class="btn btn-success btn-sm w-100 mb-4" onclick="calculateProjection()">推演資產走勢</button>
+    <button class="btn btn-success btn-sm w-100 mb-4" onclick="calculateProjection()">推演走勢</button>
 
-    <h6 class="fw-bold text-muted small">📅 全球財經日曆</h6>
+    <h6 class="fw-bold text-muted small">📅 財經日曆</h6>
     <div class="tradingview-widget-container" style="height: 300px; overflow: hidden; border-radius: 8px;">
         <div class="tradingview-widget-container__widget"></div>
         <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-events.js" async>
@@ -106,7 +117,9 @@
     </div>
 </div>
 
+<!-- 主內容區 -->
 <div class="main-wrapper">
+    <!-- KPI 卡片 -->
     <div class="row g-3 mb-4">
         <div class="col-md-3 col-6">
             <div class="pro-card border-start border-4 border-primary">
@@ -124,7 +137,7 @@
         </div>
         <div class="col-md-3 col-6">
             <div class="pro-card border-start border-4 border-warning">
-                <div class="text-muted small fw-bold text-uppercase">Est. Annual Dividend</div>
+                <div class="text-muted small fw-bold text-uppercase">Est. Dividend/Year</div>
                 <div class="kpi-value fs-3 fw-bold mono-font text-warning" id="totalDividend">0</div>
                 <div class="small text-muted">Yield: <span id="avgYield">0</span>%</div>
             </div>
@@ -141,6 +154,7 @@
         </div>
     </div>
 
+    <!-- 圖表區 -->
     <div class="row g-3 mb-4">
         <div class="col-md-4">
             <div class="pro-card">
@@ -156,25 +170,27 @@
                 <div class="progress" style="height: 6px;">
                     <div class="progress-bar bg-success" id="passiveProgress" style="width: 0%"></div>
                 </div>
-                <div class="small text-muted mt-2">目標: 50,000 / 月 (進度 <span id="passivePct">0</span>%)</div>
+                <div class="small text-muted mt-2">目標: 5萬/月 (進度 <span id="passivePct">0</span>%)</div>
             </div>
         </div>
         <div class="col-md-4">
             <div class="pro-card">
-                <h6 class="fw-bold mb-3"><i class="bi bi-graph-up-arrow"></i> 資產推演</h6>
+                <h6 class="fw-bold mb-3"><i class="bi bi-graph-up-arrow"></i> 資產預測</h6>
                 <div style="height: 250px;"><canvas id="predictionChart"></canvas></div>
             </div>
         </div>
     </div>
 
+    <!-- 詳細資料與新聞 -->
     <div class="pro-card mb-4">
         <ul class="nav nav-tabs mb-3" id="myTab">
             <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#portfolio">📊 持股監控</button></li>
-            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#heatmap">🔥 台股/美股熱力圖</button></li>
-            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#news">📰 台股新聞</button></li>
+            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#heatmap">🔥 熱力圖</button></li>
+            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#news">📰 專屬新聞</button></li>
         </ul>
         
         <div class="tab-content">
+            <!-- Tab 1: 持股 -->
             <div class="tab-pane fade show active" id="portfolio">
                 <div class="table-responsive">
                     <table class="table table-hover align-middle">
@@ -184,12 +200,13 @@
                             </tr>
                         </thead>
                         <tbody id="portfolioTableBody">
-                            <tr><td colspan="9" class="text-center py-5 text-muted">Ready. Please load data.</td></tr>
+                            <tr><td colspan="9" class="text-center py-5 text-muted">Ready.</td></tr>
                         </tbody>
                     </table>
                 </div>
             </div>
             
+            <!-- Tab 2: 熱力圖 -->
             <div class="tab-pane fade" id="heatmap">
                 <div style="height: 500px;">
                     <div class="tradingview-widget-container">
@@ -201,15 +218,21 @@
                 </div>
             </div>
 
+            <!-- Tab 3: 新聞 (動態切換版) -->
             <div class="tab-pane fade" id="news">
-                <div class="d-flex gap-2 mb-3 overflow-auto">
-                    <a href="https://tw.stock.yahoo.com/news/" target="_blank" class="btn btn-sm btn-outline-primary rounded-pill px-3"><i class="bi bi-newspaper"></i> Yahoo股市</a>
-                    <a href="https://news.cnyes.com/news/cat/tw_stock" target="_blank" class="btn btn-sm btn-outline-danger rounded-pill px-3"><i class="bi bi-graph-up"></i> 鉅亨網台股</a>
-                    <a href="https://money.udn.com/money/index" target="_blank" class="btn btn-sm btn-outline-success rounded-pill px-3"><i class="bi bi-currency-dollar"></i> 經濟日報</a>
+                <div class="mb-3">
+                    <span class="text-muted small me-2">新聞頻道：</span>
+                    <!-- 這些按鈕會切換下方新聞 -->
+                    <button class="channel-btn active" onclick="switchNews('TWSE:2330', this)">台積電</button>
+                    <button class="channel-btn" onclick="switchNews('TWSE:2317', this)">鴻海</button>
+                    <button class="channel-btn" onclick="switchNews('TWSE:2454', this)">聯發科</button>
+                    <button class="channel-btn" onclick="switchNews('TWSE:0050', this)">台灣50</button>
+                    <button class="channel-btn" onclick="switchNews('TWSE:2603', this)">長榮</button>
                 </div>
-
-                <div style="height: 500px;">
-                    <!-- 修正新聞 Widget：改用台積電 (2330) 作為新聞來源，保證有資料 -->
+                
+                <!-- 新聞 Widget 容器 -->
+                <div id="news-widget-wrapper" style="height: 600px;">
+                    <!-- 預設載入台積電 -->
                     <div class="tradingview-widget-container">
                         <div class="tradingview-widget-container__widget"></div>
                         <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-timeline.js" async>
@@ -226,6 +249,11 @@
                         </script>
                     </div>
                 </div>
+
+                <div class="mt-3 d-flex gap-2">
+                    <a href="https://tw.stock.yahoo.com/" target="_blank" class="btn btn-sm btn-outline-secondary">Yahoo! 股市</a>
+                    <a href="https://news.cnyes.com/" target="_blank" class="btn btn-sm btn-outline-secondary">鉅亨網</a>
+                </div>
             </div>
         </div>
     </div>
@@ -233,15 +261,12 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    let currentTotalAssets = 0, chartInstance = null, pieChartInstance = null, isDark = false;
+    let currentTotalAssets=0, chartInstance=null, pieChartInstance=null, isDark=false;
 
     window.onload = function() {
-        const savedTheme = localStorage.getItem('theme');
-        if (savedTheme === 'dark') enableDark(true);
-        const savedUrl = localStorage.getItem('sheetUrl');
-        if (savedUrl) { document.getElementById('sheetUrl').value = savedUrl; loadData(); }
-        const savedGoal = localStorage.getItem('fireGoal');
-        if (savedGoal) document.getElementById('fireGoal').value = savedGoal;
+        if (localStorage.getItem('theme') === 'dark') enableDark(true);
+        if (localStorage.getItem('sheetUrl')) { document.getElementById('sheetUrl').value = localStorage.getItem('sheetUrl'); loadData(); }
+        if (localStorage.getItem('fireGoal')) document.getElementById('fireGoal').value = localStorage.getItem('fireGoal');
     }
 
     function toggleTheme() { enableDark(!isDark); }
@@ -249,13 +274,56 @@
         isDark = enabled;
         document.documentElement.setAttribute('data-bs-theme', enabled ? 'dark' : 'light');
         localStorage.setItem('theme', enabled ? 'dark' : 'light');
-        if (chartInstance) { 
-            chartInstance.options.scales.x.grid.color = enabled ? '#334155' : '#e2e8f0';
-            chartInstance.options.scales.y.grid.color = enabled ? '#334155' : '#e2e8f0';
-            chartInstance.update(); 
+        if(chartInstance) { 
+            const color = enabled ? '#334155' : '#e2e8f0';
+            chartInstance.options.scales.x.grid.color = color;
+            chartInstance.options.scales.y.grid.color = color;
+            chartInstance.update();
         }
     }
     function toggleSidebar() { document.getElementById('sidebar').classList.toggle('show'); }
+
+    // --- 新聞切換功能 (核心) ---
+    function switchNews(symbol, btn) {
+        // 1. 更新按鈕樣式
+        document.querySelectorAll('.channel-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        // 2. 清空並重建 Widget 容器
+        const container = document.getElementById('news-widget-wrapper');
+        container.innerHTML = ''; // 清空舊的
+
+        // 3. 建立新的 Widget 結構
+        const div1 = document.createElement('div');
+        div1.className = 'tradingview-widget-container';
+        div1.style.height = '100%';
+        div1.style.width = '100%';
+
+        const div2 = document.createElement('div');
+        div2.className = 'tradingview-widget-container__widget';
+        div1.appendChild(div2);
+
+        // 4. 建立新的 Script
+        const script = document.createElement('script');
+        script.type = 'text/javascript';
+        script.async = true;
+        script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-timeline.js';
+        
+        // 設定參數
+        script.innerHTML = JSON.stringify({
+            "feedMode": "symbol",
+            "symbol": symbol,
+            "colorTheme": isDark ? "dark" : "light",
+            "isTransparent": true,
+            "displayMode": "regular",
+            "width": "100%",
+            "height": "100%",
+            "locale": "zh_TW"
+        });
+
+        div1.appendChild(script);
+        container.appendChild(div1);
+    }
 
     function loadData() {
         const url = document.getElementById('sheetUrl').value.trim();
