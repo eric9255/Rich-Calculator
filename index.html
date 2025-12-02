@@ -21,55 +21,45 @@
         }
         body { background-color: var(--bg-body); color: var(--text-primary); font-family: 'Noto Sans TC', sans-serif; transition: 0.3s; padding-top: 50px; }
         
-        /* 跑馬燈 */
         .ticker-tape { height: 50px; width: 100%; position: fixed; top: 0; left: 0; z-index: 1030; }
-        
-        /* 側邊欄 */
         .sidebar { width: var(--sidebar-width); height: calc(100vh - 50px); position: fixed; top: 50px; left: 0; background: var(--bg-card); border-right: 1px solid rgba(128,128,128,0.1); padding: 20px; overflow-y: auto; z-index: 1020; transition: 0.3s; }
-        
-        /* 主畫面 */
         .main-wrapper { margin-left: var(--sidebar-width); padding: 25px; transition: 0.3s; }
-        
-        /* 卡片與元件 */
         .pro-card { background: var(--bg-card); border-radius: 12px; padding: 20px; border: 1px solid rgba(128,128,128,0.1); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); height: 100%; }
         .mono-font { font-family: 'JetBrains Mono', monospace; letter-spacing: -0.5px; }
         .progress-bar { transition: width 1.5s ease-in-out; }
         
-        /* 手機適配 */
         @media (max-width: 768px) {
             .sidebar { transform: translateX(-100%); width: 280px; height: 100%; top: 0; z-index: 1050; }
             .sidebar.show { transform: translateX(0); }
-            .main-wrapper { margin-left: 0; padding: 15px; padding-top: 20px; } /* 修正手機頂部間距 */
-            .ticker-tape { display: none; } /* 手機版隱藏跑馬燈以節省空間 */
+            .main-wrapper { margin-left: 0; padding: 15px; padding-top: 20px; }
+            .ticker-tape { display: none; }
             body { padding-top: 50px; }
             .mobile-header { display: flex !important; }
         }
         .mobile-header { display: none; height: 50px; background: var(--bg-card); position: fixed; top: 0; left: 0; width: 100%; z-index: 1040; align-items: center; padding: 0 15px; border-bottom: 1px solid rgba(128,128,128,0.1); }
         
-        /* 按鈕群組 */
         .channel-btn { border-radius: 20px; padding: 5px 15px; font-size: 0.9rem; transition: 0.2s; border: 1px solid rgba(128,128,128,0.2); background: var(--bg-card); color: var(--text-primary); margin-right: 5px; margin-bottom: 5px; }
         .channel-btn:hover, .channel-btn.active { background: var(--accent-color); color: white; border-color: var(--accent-color); }
     </style>
 </head>
 <body>
 
-<!-- 手機版 Header -->
 <div class="mobile-header justify-content-between">
     <span class="fw-bold"><i class="bi bi-graph-up"></i> 台股戰情室</span>
     <button class="btn btn-sm btn-outline-secondary" onclick="toggleSidebar()"><i class="bi bi-list"></i></button>
 </div>
 
-<!-- 電腦版跑馬燈 (已加入鴻海) -->
+<!-- 修正：使用 TPE 代替 TWSE，解決紅色驚嘆號問題 -->
 <div class="ticker-tape d-none d-md-block">
     <div class="tradingview-widget-container">
         <div class="tradingview-widget-container__widget"></div>
         <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js" async>
         {
         "symbols": [
-            {"proName": "TWSE:0050", "title": "台灣50"},
-            {"proName": "TWSE:2330", "title": "台積電"},
-            {"proName": "TWSE:2317", "title": "鴻海"},
-            {"proName": "TWSE:2454", "title": "聯發科"},
+            {"proName": "TPE:0050", "title": "台灣50"},
+            {"proName": "TPE:2330", "title": "台積電"},
+            {"proName": "TPE:2317", "title": "鴻海"},
+            {"proName": "TPE:2454", "title": "聯發科"},
             {"proName": "FX_IDC:USDTWD", "title": "美元/台幣"},
             {"proName": "FOREXCOM:SPXUSD", "title": "S&P 500"}
         ],
@@ -79,7 +69,6 @@
     </div>
 </div>
 
-<!-- 左側側邊欄 -->
 <div class="sidebar" id="sidebar">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h5 class="fw-bold mb-0">🎛️ 控制中心</h5>
@@ -117,9 +106,7 @@
     </div>
 </div>
 
-<!-- 主內容區 -->
 <div class="main-wrapper">
-    <!-- KPI 卡片 -->
     <div class="row g-3 mb-4">
         <div class="col-md-3 col-6">
             <div class="pro-card border-start border-4 border-primary">
@@ -154,7 +141,6 @@
         </div>
     </div>
 
-    <!-- 圖表區 -->
     <div class="row g-3 mb-4">
         <div class="col-md-4">
             <div class="pro-card">
@@ -181,16 +167,14 @@
         </div>
     </div>
 
-    <!-- 詳細資料與新聞 -->
     <div class="pro-card mb-4">
         <ul class="nav nav-tabs mb-3" id="myTab">
             <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#portfolio">📊 持股監控</button></li>
             <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#heatmap">🔥 熱力圖</button></li>
-            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#news">📰 專屬新聞</button></li>
+            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#news">📰 相關新聞</button></li>
         </ul>
         
         <div class="tab-content">
-            <!-- Tab 1: 持股 -->
             <div class="tab-pane fade show active" id="portfolio">
                 <div class="table-responsive">
                     <table class="table table-hover align-middle">
@@ -200,13 +184,12 @@
                             </tr>
                         </thead>
                         <tbody id="portfolioTableBody">
-                            <tr><td colspan="9" class="text-center py-5 text-muted">Ready.</td></tr>
+                            <tr><td colspan="9" class="text-center py-5 text-muted">Ready. Please load data.</td></tr>
                         </tbody>
                     </table>
                 </div>
             </div>
             
-            <!-- Tab 2: 熱力圖 -->
             <div class="tab-pane fade" id="heatmap">
                 <div style="height: 500px;">
                     <div class="tradingview-widget-container">
@@ -218,27 +201,40 @@
                 </div>
             </div>
 
-            <!-- Tab 3: 新聞 (動態切換版) -->
+            <!-- Tab 3: 新聞 (修正版) -->
             <div class="tab-pane fade" id="news">
-                <div class="mb-3">
-                    <span class="text-muted small me-2">新聞頻道：</span>
-                    <!-- 這些按鈕會切換下方新聞 -->
-                    <button class="channel-btn active" onclick="switchNews('TWSE:2330', this)">台積電</button>
-                    <button class="channel-btn" onclick="switchNews('TWSE:2317', this)">鴻海</button>
-                    <button class="channel-btn" onclick="switchNews('TWSE:2454', this)">聯發科</button>
-                    <button class="channel-btn" onclick="switchNews('TWSE:0050', this)">台灣50</button>
-                    <button class="channel-btn" onclick="switchNews('TWSE:2603', this)">長榮</button>
+                <div class="alert alert-light border small text-muted">
+                    <i class="bi bi-info-circle"></i> 提示：點擊按鈕後，請查看下方的「Yahoo / 鉅亨網」連結，該連結會自動切換至對應個股。
                 </div>
                 
-                <!-- 新聞 Widget 容器 -->
-                <div id="news-widget-wrapper" style="height: 600px;">
-                    <!-- 預設載入台積電 -->
+                <div class="mb-3">
+                    <!-- 切換按鈕 -->
+                    <button class="channel-btn active" onclick="switchNews('2330', '台積電', this)">台積電</button>
+                    <button class="channel-btn" onclick="switchNews('2317', '鴻海', this)">鴻海</button>
+                    <button class="channel-btn" onclick="switchNews('2454', '聯發科', this)">聯發科</button>
+                    <button class="channel-btn" onclick="switchNews('0050', '台灣50', this)">台灣50</button>
+                    <button class="channel-btn" onclick="switchNews('2603', '長榮', this)">長榮</button>
+                </div>
+
+                <div class="mt-3 d-flex gap-2 mb-4">
+                    <!-- 這些連結會動態改變 -->
+                    <a id="link-yahoo" href="https://tw.stock.yahoo.com/quote/2330" target="_blank" class="btn btn-sm btn-outline-primary w-100">
+                        <i class="bi bi-newspaper"></i> 前往 Yahoo <span id="label-yahoo">台積電</span>
+                    </a>
+                    <a id="link-cnyes" href="https://news.cnyes.com/news/id/2330" target="_blank" class="btn btn-sm btn-outline-danger w-100">
+                        <i class="bi bi-graph-up"></i> 前往 鉅亨網 <span id="label-cnyes">台積電</span>
+                    </a>
+                </div>
+                
+                <h6 class="text-muted fw-bold">市場重點新聞 (台積電/大盤)</h6>
+                <!-- 這裡固定放台積電新聞，避免 No Data -->
+                <div id="news-widget-wrapper" style="height: 500px;">
                     <div class="tradingview-widget-container">
                         <div class="tradingview-widget-container__widget"></div>
                         <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-timeline.js" async>
                         {
                             "feedMode": "symbol",
-                            "symbol": "TWSE:2330",
+                            "symbol": "TPE:2330",
                             "colorTheme": "light",
                             "isTransparent": true,
                             "displayMode": "regular",
@@ -248,11 +244,6 @@
                         }
                         </script>
                     </div>
-                </div>
-
-                <div class="mt-3 d-flex gap-2">
-                    <a href="https://tw.stock.yahoo.com/" target="_blank" class="btn btn-sm btn-outline-secondary">Yahoo! 股市</a>
-                    <a href="https://news.cnyes.com/" target="_blank" class="btn btn-sm btn-outline-secondary">鉅亨網</a>
                 </div>
             </div>
         </div>
@@ -283,46 +274,21 @@
     }
     function toggleSidebar() { document.getElementById('sidebar').classList.toggle('show'); }
 
-    // --- 新聞切換功能 (核心) ---
-    function switchNews(symbol, btn) {
+    // --- 新聞切換功能 (連結更新版) ---
+    function switchNews(code, name, btn) {
         // 1. 更新按鈕樣式
         document.querySelectorAll('.channel-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
 
-        // 2. 清空並重建 Widget 容器
-        const container = document.getElementById('news-widget-wrapper');
-        container.innerHTML = ''; // 清空舊的
-
-        // 3. 建立新的 Widget 結構
-        const div1 = document.createElement('div');
-        div1.className = 'tradingview-widget-container';
-        div1.style.height = '100%';
-        div1.style.width = '100%';
-
-        const div2 = document.createElement('div');
-        div2.className = 'tradingview-widget-container__widget';
-        div1.appendChild(div2);
-
-        // 4. 建立新的 Script
-        const script = document.createElement('script');
-        script.type = 'text/javascript';
-        script.async = true;
-        script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-timeline.js';
+        // 2. 更新外部連結 (這才是真正有新聞的地方)
+        document.getElementById('link-yahoo').href = `https://tw.stock.yahoo.com/quote/${code}`;
+        document.getElementById('label-yahoo').innerText = name;
         
-        // 設定參數
-        script.innerHTML = JSON.stringify({
-            "feedMode": "symbol",
-            "symbol": symbol,
-            "colorTheme": isDark ? "dark" : "light",
-            "isTransparent": true,
-            "displayMode": "regular",
-            "width": "100%",
-            "height": "100%",
-            "locale": "zh_TW"
-        });
-
-        div1.appendChild(script);
-        container.appendChild(div1);
+        // 鉅亨網搜尋連結
+        document.getElementById('link-cnyes').href = `https://www.cnyes.com/search/news?q=${code}`;
+        document.getElementById('label-cnyes').innerText = name;
+        
+        // 註：不更新 TradingView Widget，因為它不支援這些個股，保持顯示台積電/大盤最美觀
     }
 
     function loadData() {
