@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Taiwan Investment Command Center (Pro)</title>
+    <title>Taiwan Investment Command Center (Final)</title>
     
     <!-- 核心套件 -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -49,21 +49,39 @@
     <button class="btn btn-sm btn-outline-secondary" onclick="toggleSidebar()"><i class="bi bi-list"></i></button>
 </div>
 
-<!-- 修正：使用 TPE 代替 TWSE，解決紅色驚嘆號問題 -->
+<!-- 跑馬燈終極修復：改用全球通用代碼 (US ADR / TVC / Forex) -->
 <div class="ticker-tape d-none d-md-block">
     <div class="tradingview-widget-container">
         <div class="tradingview-widget-container__widget"></div>
         <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js" async>
         {
         "symbols": [
-            {"proName": "TPE:0050", "title": "台灣50"},
-            {"proName": "TPE:2330", "title": "台積電"},
-            {"proName": "TPE:2317", "title": "鴻海"},
-            {"proName": "TPE:2454", "title": "聯發科"},
-            {"proName": "FX_IDC:USDTWD", "title": "美元/台幣"},
-            {"proName": "FOREXCOM:SPXUSD", "title": "S&P 500"}
+            {
+                "proName": "TVC:TAIEX",
+                "title": "台灣加權指數"
+            },
+            {
+                "proName": "NASDAQ:TSM",
+                "title": "台積電 (美股ADR)"
+            },
+            {
+                "proName": "FX_IDC:USDTWD",
+                "title": "美元/台幣"
+            },
+            {
+                "proName": "FOREXCOM:SPXUSD",
+                "title": "S&P 500"
+            },
+            {
+                "proName": "FOREXCOM:NSXUSD",
+                "title": "Nasdaq 100"
+            }
         ],
-        "showSymbolLogo": true, "colorTheme": "light", "isTransparent": false, "displayMode": "adaptive", "locale": "zh_TW"
+        "showSymbolLogo": true,
+        "colorTheme": "light",
+        "isTransparent": false,
+        "displayMode": "adaptive",
+        "locale": "zh_TW"
         }
         </script>
     </div>
@@ -171,7 +189,7 @@
         <ul class="nav nav-tabs mb-3" id="myTab">
             <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#portfolio">📊 持股監控</button></li>
             <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#heatmap">🔥 熱力圖</button></li>
-            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#news">📰 相關新聞</button></li>
+            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#news">📰 專屬新聞</button></li>
         </ul>
         
         <div class="tab-content">
@@ -201,14 +219,13 @@
                 </div>
             </div>
 
-            <!-- Tab 3: 新聞 (修正版) -->
+            <!-- Tab 3: 新聞 (連結修復版) -->
             <div class="tab-pane fade" id="news">
                 <div class="alert alert-light border small text-muted">
-                    <i class="bi bi-info-circle"></i> 提示：點擊按鈕後，請查看下方的「Yahoo / 鉅亨網」連結，該連結會自動切換至對應個股。
+                    <i class="bi bi-info-circle"></i> 點擊上方按鈕，下方的 Yahoo/鉅亨網 連結會自動更新。
                 </div>
                 
                 <div class="mb-3">
-                    <!-- 切換按鈕 -->
                     <button class="channel-btn active" onclick="switchNews('2330', '台積電', this)">台積電</button>
                     <button class="channel-btn" onclick="switchNews('2317', '鴻海', this)">鴻海</button>
                     <button class="channel-btn" onclick="switchNews('2454', '聯發科', this)">聯發科</button>
@@ -217,24 +234,22 @@
                 </div>
 
                 <div class="mt-3 d-flex gap-2 mb-4">
-                    <!-- 這些連結會動態改變 -->
                     <a id="link-yahoo" href="https://tw.stock.yahoo.com/quote/2330" target="_blank" class="btn btn-sm btn-outline-primary w-100">
-                        <i class="bi bi-newspaper"></i> 前往 Yahoo <span id="label-yahoo">台積電</span>
+                        <i class="bi bi-newspaper"></i> Yahoo: <span id="label-yahoo">台積電</span>
                     </a>
                     <a id="link-cnyes" href="https://news.cnyes.com/news/id/2330" target="_blank" class="btn btn-sm btn-outline-danger w-100">
-                        <i class="bi bi-graph-up"></i> 前往 鉅亨網 <span id="label-cnyes">台積電</span>
+                        <i class="bi bi-graph-up"></i> 鉅亨網: <span id="label-cnyes">台積電</span>
                     </a>
                 </div>
                 
-                <h6 class="text-muted fw-bold">市場重點新聞 (台積電/大盤)</h6>
-                <!-- 這裡固定放台積電新聞，避免 No Data -->
+                <h6 class="text-muted fw-bold">國際/產業新聞 (固定為台積電以確保顯示)</h6>
                 <div id="news-widget-wrapper" style="height: 500px;">
                     <div class="tradingview-widget-container">
                         <div class="tradingview-widget-container__widget"></div>
                         <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-timeline.js" async>
                         {
                             "feedMode": "symbol",
-                            "symbol": "TPE:2330",
+                            "symbol": "NASDAQ:TSM", 
                             "colorTheme": "light",
                             "isTransparent": true,
                             "displayMode": "regular",
@@ -274,21 +289,13 @@
     }
     function toggleSidebar() { document.getElementById('sidebar').classList.toggle('show'); }
 
-    // --- 新聞切換功能 (連結更新版) ---
     function switchNews(code, name, btn) {
-        // 1. 更新按鈕樣式
         document.querySelectorAll('.channel-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
-
-        // 2. 更新外部連結 (這才是真正有新聞的地方)
         document.getElementById('link-yahoo').href = `https://tw.stock.yahoo.com/quote/${code}`;
         document.getElementById('label-yahoo').innerText = name;
-        
-        // 鉅亨網搜尋連結
         document.getElementById('link-cnyes').href = `https://www.cnyes.com/search/news?q=${code}`;
         document.getElementById('label-cnyes').innerText = name;
-        
-        // 註：不更新 TradingView Widget，因為它不支援這些個股，保持顯示台積電/大盤最美觀
     }
 
     function loadData() {
