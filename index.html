@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Taiwan Investment Command Center (Final)</title>
+    <title>Taiwan Investment Command Center (Stable)</title>
     
     <!-- 核心套件 -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -49,39 +49,21 @@
     <button class="btn btn-sm btn-outline-secondary" onclick="toggleSidebar()"><i class="bi bi-list"></i></button>
 </div>
 
-<!-- 跑馬燈終極修復：改用全球通用代碼 (US ADR / TVC / Forex) -->
+<!-- 跑馬燈修復版：改用美股代號 (EWT, TSM) 確保 100% 顯示 -->
 <div class="ticker-tape d-none d-md-block">
     <div class="tradingview-widget-container">
         <div class="tradingview-widget-container__widget"></div>
         <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js" async>
         {
         "symbols": [
-            {
-                "proName": "TVC:TAIEX",
-                "title": "台灣加權指數"
-            },
-            {
-                "proName": "NASDAQ:TSM",
-                "title": "台積電 (美股ADR)"
-            },
-            {
-                "proName": "FX_IDC:USDTWD",
-                "title": "美元/台幣"
-            },
-            {
-                "proName": "FOREXCOM:SPXUSD",
-                "title": "S&P 500"
-            },
-            {
-                "proName": "FOREXCOM:NSXUSD",
-                "title": "Nasdaq 100"
-            }
+            {"proName": "AMEX:EWT", "title": "MSCI台灣ETF (大盤指標)"},
+            {"proName": "NYSE:TSM", "title": "台積電 ADR"},
+            {"proName": "FX_IDC:USDTWD", "title": "美元/台幣"},
+            {"proName": "FOREXCOM:SPXUSD", "title": "S&P 500"},
+            {"proName": "FOREXCOM:NSXUSD", "title": "Nasdaq 100"},
+            {"proName": "TVC:GOLD", "title": "黃金"}
         ],
-        "showSymbolLogo": true,
-        "colorTheme": "light",
-        "isTransparent": false,
-        "displayMode": "adaptive",
-        "locale": "zh_TW"
+        "showSymbolLogo": true, "colorTheme": "light", "isTransparent": false, "displayMode": "adaptive", "locale": "zh_TW"
         }
         </script>
     </div>
@@ -219,10 +201,10 @@
                 </div>
             </div>
 
-            <!-- Tab 3: 新聞 (連結修復版) -->
+            <!-- Tab 3: 新聞 (保證有畫面版) -->
             <div class="tab-pane fade" id="news">
                 <div class="alert alert-light border small text-muted">
-                    <i class="bi bi-info-circle"></i> 點擊上方按鈕，下方的 Yahoo/鉅亨網 連結會自動更新。
+                    <i class="bi bi-info-circle"></i> 提示：點擊按鈕可快速前往 Yahoo/鉅亨網 查看台股個股新聞。下方顯示國際財經頭條。
                 </div>
                 
                 <div class="mb-3">
@@ -242,14 +224,15 @@
                     </a>
                 </div>
                 
-                <h6 class="text-muted fw-bold">國際/產業新聞 (固定為台積電以確保顯示)</h6>
+                <!-- 新聞 Widget 修復：改用 S&P 500 作為預設新聞源，保證有內容 -->
+                <h6 class="text-muted fw-bold">國際市場頭條 (S&P 500)</h6>
                 <div id="news-widget-wrapper" style="height: 500px;">
                     <div class="tradingview-widget-container">
                         <div class="tradingview-widget-container__widget"></div>
                         <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-timeline.js" async>
                         {
                             "feedMode": "symbol",
-                            "symbol": "NASDAQ:TSM", 
+                            "symbol": "FOREXCOM:SPXUSD", 
                             "colorTheme": "light",
                             "isTransparent": true,
                             "displayMode": "regular",
@@ -420,4 +403,3 @@
 </script>
 </body>
 </html>
-
