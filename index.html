@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Investment Command Center (Clean)</title>
+    <title>Investment Command Center (Trend Fix)</title>
     
     <!-- 核心套件 -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -28,6 +28,12 @@
         .pro-card { background: var(--bg-card); border-radius: 12px; padding: 20px; border: 1px solid rgba(128,128,128,0.1); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); height: 100%; }
         .mono-font { font-family: 'JetBrains Mono', monospace; letter-spacing: -0.5px; }
         .progress-bar { transition: width 1.5s ease-in-out; }
+        
+        /* 表格優化 */
+        .table-responsive { overflow-x: auto; }
+        .table th { white-space: nowrap; font-size: 0.85rem; color: #64748b; }
+        .table td { white-space: nowrap; }
+        .trend-col { background-color: rgba(0,0,0,0.02); border-left: 2px solid rgba(0,0,0,0.05); }
         
         @media (max-width: 768px) {
             body { padding-top: calc(var(--ticker-height) + var(--header-height)); }
@@ -107,6 +113,7 @@
 </div>
 
 <div class="main-wrapper">
+    <!-- KPI 卡片 -->
     <div class="row g-3 mb-4">
         <div class="col-md-3 col-6">
             <div class="pro-card border-start border-4 border-primary">
@@ -143,6 +150,7 @@
         </div>
     </div>
 
+    <!-- 圖表區 -->
     <div class="row g-3 mb-4">
         <div class="col-md-4">
             <div class="pro-card">
@@ -182,11 +190,22 @@
                     <table class="table table-hover align-middle">
                         <thead class="table-light">
                             <tr>
-                                <th>標的</th><th>分類</th><th>配息</th><th class="text-end">現價</th><th class="text-end">市值</th><th class="text-end">損益</th><th class="text-end">年化%</th><th class="text-end">殖利率%</th><th class="text-end">3Y Trend</th>
+                                <th>標的</th>
+                                <th>分類</th>
+                                <th>配息</th>
+                                <th class="text-end">現價</th>
+                                <th class="text-end">市值</th>
+                                <th class="text-end">損益</th>
+                                <th class="text-end">年化%</th>
+                                <th class="text-end">殖利率%</th>
+                                <!-- 修正：把 3年, 5年, 10年 的標題都加回來 -->
+                                <th class="text-end trend-col">3年</th>
+                                <th class="text-end trend-col">5年</th>
+                                <th class="text-end trend-col">10年</th>
                             </tr>
                         </thead>
                         <tbody id="portfolioTableBody">
-                            <tr><td colspan="9" class="text-center py-5 text-muted">Ready. Please load data.</td></tr>
+                            <tr><td colspan="12" class="text-center py-5 text-muted">Ready. Please load data.</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -308,7 +327,7 @@
                 const estDiv = mkVal * (yieldPct / 100);
                 const freq = row['Freq'] ? row['Freq'].trim() : '年';
 
-                // 1. 累積計算 (後台邏輯：全部都要算)
+                // 1. 累積計算 (後台照算)
                 totalMkt += mkVal;
                 totalCst += (mkVal - unrealizedProf);
                 totalDiv += estDiv;
@@ -317,14 +336,16 @@
 
                 if(categories[type]) categories[type] += mkVal; else categories[type] = mkVal;
 
-                // 2. 顯示邏輯 (前台邏輯：CASH 和 股數為0 的不顯示)
-                const isCash = row['Code'].toString().toUpperCase() === 'CASH';
+                // 2. 顯示邏輯：強力過濾 CASH, 現金, USD, TWD 以及股數=0
+                const codeStr = row['Code'].toString().trim().toUpperCase();
+                const isCash = (codeStr === 'CASH' || codeStr === '現金' || codeStr === 'TWD' || codeStr === 'USD');
                 
                 if (shares > 0 && !isCash) {
                     let freqClass = 'bg-secondary';
                     if(freq.includes('月')) freqClass = 'bg-danger';
                     if(freq.includes('季')) freqClass = 'bg-primary';
 
+                    // 修正：把 Return3Y, Return5Y, Return10Y 全部加回來
                     const tr = `<tr>
                         <td class="fw-bold text-primary mono-font">${row['Code']}</td>
                         <td><span class="badge bg-light text-dark border">${type}</span></td>
@@ -334,7 +355,11 @@
                         <td class="text-end ${getColor(unrealizedProf)} mono-font">${Math.round(unrealizedProf).toLocaleString()}</td>
                         <td class="text-end ${getColor(parsePct(row['Annualized']))}">${formatPct(parsePct(row['Annualized']))}</td>
                         <td class="text-end text-muted">${yieldPct.toFixed(2)}%</td>
-                        <td class="text-end ${getColor(parsePct(row['Return3Y']))}">${formatPct(parsePct(row['Return3Y']))}</td>
+                        
+                        <!-- 趨勢欄位修正區 -->
+                        <td class="text-end trend-col ${getColor(parsePct(row['Return3Y']))}">${formatPct(parsePct(row['Return3Y']))}</td>
+                        <td class="text-end trend-col ${getColor(parsePct(row['Return5Y']))}">${formatPct(parsePct(row['Return5Y']))}</td>
+                        <td class="text-end trend-col ${getColor(parsePct(row['Return10Y']))}">${formatPct(parsePct(row['Return10Y']))}</td>
                     </tr>`;
                     tbody.innerHTML += tr;
                 }
