@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Taiwan Investment Command Center (Perfect)</title>
+    <title>Investment Command Center (Full)</title>
     
     <!-- 核心套件 -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -15,53 +15,74 @@
     <style>
         :root {
             --bg-body: #f3f6f9; --bg-card: #ffffff; --text-primary: #1e293b; --accent-color: #2563eb; --sidebar-width: 280px;
+            --header-height: 50px; --ticker-height: 50px;
         }
         [data-bs-theme="dark"] {
             --bg-body: #0f172a; --bg-card: #1e293b; --text-primary: #e2e8f0; --accent-color: #3b82f6;
         }
-        body { background-color: var(--bg-body); color: var(--text-primary); font-family: 'Noto Sans TC', sans-serif; transition: 0.3s; padding-top: 50px; }
+        body { background-color: var(--bg-body); color: var(--text-primary); font-family: 'Noto Sans TC', sans-serif; transition: 0.3s; padding-top: var(--ticker-height); }
         
-        .ticker-tape { height: 50px; width: 100%; position: fixed; top: 0; left: 0; z-index: 1030; }
-        .sidebar { width: var(--sidebar-width); height: calc(100vh - 50px); position: fixed; top: 50px; left: 0; background: var(--bg-card); border-right: 1px solid rgba(128,128,128,0.1); padding: 20px; overflow-y: auto; z-index: 1020; transition: 0.3s; }
+        /* 跑馬燈：永遠置頂 */
+        .ticker-tape { height: var(--ticker-height); width: 100%; position: fixed; top: 0; left: 0; z-index: 1050; background: var(--bg-card); }
+        
+        /* 側邊欄 */
+        .sidebar { width: var(--sidebar-width); height: calc(100vh - var(--ticker-height)); position: fixed; top: var(--ticker-height); left: 0; background: var(--bg-card); border-right: 1px solid rgba(128,128,128,0.1); padding: 20px; overflow-y: auto; z-index: 1020; transition: 0.3s; }
+        
+        /* 主畫面 */
         .main-wrapper { margin-left: var(--sidebar-width); padding: 25px; transition: 0.3s; }
+        
+        /* 卡片與元件 */
         .pro-card { background: var(--bg-card); border-radius: 12px; padding: 20px; border: 1px solid rgba(128,128,128,0.1); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); height: 100%; }
         .mono-font { font-family: 'JetBrains Mono', monospace; letter-spacing: -0.5px; }
         .progress-bar { transition: width 1.5s ease-in-out; }
         
+        /* 手機適配修正 */
         @media (max-width: 768px) {
-            .sidebar { transform: translateX(-100%); width: 280px; height: 100%; top: 0; z-index: 1050; }
+            /* 身體再往下推，留空間給 Header + Ticker */
+            body { padding-top: calc(var(--ticker-height) + var(--header-height)); }
+            
+            /* 跑馬燈在最上面 */
+            .ticker-tape { top: 0; z-index: 1060; display: block !important; }
+            
+            /* 手機標題列在跑馬燈下面 */
+            .mobile-header { display: flex !important; height: var(--header-height); background: var(--bg-card); position: fixed; top: var(--ticker-height); left: 0; width: 100%; z-index: 1040; align-items: center; padding: 0 15px; border-bottom: 1px solid rgba(128,128,128,0.1); }
+            
+            /* 側邊欄位置調整 */
+            .sidebar { transform: translateX(-100%); width: 280px; height: 100%; top: 0; z-index: 1070; }
             .sidebar.show { transform: translateX(0); }
-            .main-wrapper { margin-left: 0; padding: 15px; padding-top: 20px; }
-            .ticker-tape { display: none; }
-            body { padding-top: 50px; }
-            .mobile-header { display: flex !important; }
+            
+            .main-wrapper { margin-left: 0; padding: 15px; }
         }
-        .mobile-header { display: none; height: 50px; background: var(--bg-card); position: fixed; top: 0; left: 0; width: 100%; z-index: 1040; align-items: center; padding: 0 15px; border-bottom: 1px solid rgba(128,128,128,0.1); }
+        
+        .mobile-header { display: none; }
         
         .channel-btn { border-radius: 20px; padding: 5px 15px; font-size: 0.9rem; transition: 0.2s; border: 1px solid rgba(128,128,128,0.2); background: var(--bg-card); color: var(--text-primary); margin-right: 5px; margin-bottom: 5px; }
         .channel-btn:hover, .channel-btn.active { background: var(--accent-color); color: white; border-color: var(--accent-color); }
+        
+        /* 損益小字樣式 */
+        .pnl-detail { font-size: 0.75rem; color: #64748b; margin-top: 5px; }
     </style>
 </head>
 <body>
 
+<!-- 手機版 Header -->
 <div class="mobile-header justify-content-between">
     <span class="fw-bold"><i class="bi bi-graph-up"></i> 台股戰情室</span>
     <button class="btn btn-sm btn-outline-secondary" onclick="toggleSidebar()"><i class="bi bi-list"></i></button>
 </div>
 
-<!-- 跑馬燈 (維持成功版本：美股代號) -->
-<div class="ticker-tape d-none d-md-block">
+<!-- 跑馬燈 (手機版現在看得到了) -->
+<div class="ticker-tape">
     <div class="tradingview-widget-container">
         <div class="tradingview-widget-container__widget"></div>
         <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js" async>
         {
         "symbols": [
-            {"proName": "AMEX:EWT", "title": "台灣ETF (大盤指標)"},
+            {"proName": "AMEX:EWT", "title": "台灣ETF"},
             {"proName": "NYSE:TSM", "title": "台積電 ADR"},
             {"proName": "FX_IDC:USDTWD", "title": "美元/台幣"},
             {"proName": "FOREXCOM:SPXUSD", "title": "S&P 500"},
-            {"proName": "FOREXCOM:NSXUSD", "title": "Nasdaq 100"},
-            {"proName": "TVC:GOLD", "title": "黃金"}
+            {"proName": "FOREXCOM:NSXUSD", "title": "Nasdaq 100"}
         ],
         "showSymbolLogo": true, "colorTheme": "light", "isTransparent": false, "displayMode": "adaptive", "locale": "zh_TW"
         }
@@ -69,8 +90,9 @@
     </div>
 </div>
 
+<!-- 左側側邊欄 -->
 <div class="sidebar" id="sidebar">
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-4 pt-3">
         <h5 class="fw-bold mb-0">🎛️ 控制中心</h5>
         <button class="btn btn-sm btn-outline-secondary d-md-none" onclick="toggleSidebar()">✕</button>
     </div>
@@ -106,7 +128,9 @@
     </div>
 </div>
 
+<!-- 主內容區 -->
 <div class="main-wrapper">
+    <!-- KPI 卡片 -->
     <div class="row g-3 mb-4">
         <div class="col-md-3 col-6">
             <div class="pro-card border-start border-4 border-primary">
@@ -117,9 +141,12 @@
         </div>
         <div class="col-md-3 col-6">
             <div class="pro-card border-start border-4 border-danger" id="pnlCard">
-                <div class="text-muted small fw-bold text-uppercase">Total P&L</div>
+                <div class="text-muted small fw-bold text-uppercase">Total P&L (含已實現)</div>
                 <div class="kpi-value fs-3 fw-bold mono-font" id="totalProfit">0</div>
-                <div class="small fw-bold" id="profitPct">0%</div>
+                <!-- 新增：顯示未實現/已實現細項 -->
+                <div class="pnl-detail">
+                    帳面: <span id="unrealizedProfit">0</span> | 已結: <span id="realizedProfit">0</span>
+                </div>
             </div>
         </div>
         <div class="col-md-3 col-6">
@@ -141,6 +168,7 @@
         </div>
     </div>
 
+    <!-- 圖表區 -->
     <div class="row g-3 mb-4">
         <div class="col-md-4">
             <div class="pro-card">
@@ -201,7 +229,7 @@
                 </div>
             </div>
 
-            <!-- Tab 3: 新聞 (終極修復版) -->
+            <!-- Tab 3: 新聞 -->
             <div class="tab-pane fade" id="news">
                 <div class="alert alert-light border small text-muted">
                     <i class="bi bi-info-circle"></i> 提示：點擊按鈕可快速前往 Yahoo/鉅亨網 查看台股個股新聞。
@@ -224,7 +252,6 @@
                     </a>
                 </div>
                 
-                <!-- 新聞 Widget 修正：改用全市場模式 (feedMode: all_symbols)，保證永遠有新聞 -->
                 <h6 class="text-muted fw-bold">全球熱門財經頭條</h6>
                 <div id="news-widget-wrapper" style="height: 500px;">
                     <div class="tradingview-widget-container">
@@ -294,51 +321,75 @@
         const tbody = document.getElementById('portfolioTableBody');
         tbody.innerHTML = "";
         let totalMkt=0, totalCst=0, totalDiv=0, categories={};
+        
+        // 新增：損益變數
+        let totalUnrealized = 0;
+        let totalRealized = 0;
 
         data.forEach(row => {
             if(row['Code']) {
+                const shares = parseNum(row['Shares']);
+                
+                // 讀取各項數據
                 const mkVal = parseNum(row['MarketVal']);
-                const prof = parseNum(row['Profit']);
+                const unrealizedProf = parseNum(row['Profit']); // 未實現損益 (Sheet算好的)
+                const realizedProf = parseNum(row['Realized']); // 已實現損益 (新欄位)
+                
                 const type = row['Type'] || 'Other';
                 const yieldPct = parseNum(row['Yield']);
                 const estDiv = mkVal * (yieldPct / 100);
                 const freq = row['Freq'] ? row['Freq'].trim() : '年';
 
-                totalMkt += mkVal; totalCst += (mkVal - prof); totalDiv += estDiv;
+                // 累加總數
+                totalMkt += mkVal;
+                totalCst += (mkVal - unrealizedProf); // 倒推成本
+                totalDiv += estDiv;
+                
+                // 損益累加
+                totalUnrealized += unrealizedProf;
+                totalRealized += realizedProf;
+
                 if(categories[type]) categories[type] += mkVal; else categories[type] = mkVal;
 
-                let freqClass = 'bg-secondary';
-                if(freq.includes('月')) freqClass = 'bg-danger';
-                if(freq.includes('季')) freqClass = 'bg-primary';
+                // 只有當股數 > 0 時，才顯示在持股列表 (賣掉的不顯示)
+                if (shares > 0) {
+                    let freqClass = 'bg-secondary';
+                    if(freq.includes('月')) freqClass = 'bg-danger';
+                    if(freq.includes('季')) freqClass = 'bg-primary';
 
-                const tr = `<tr>
-                    <td class="fw-bold text-primary mono-font">${row['Code']}</td>
-                    <td><span class="badge bg-light text-dark border">${type}</span></td>
-                    <td><span class="badge ${freqClass}">${freq}</span></td>
-                    <td class="text-end mono-font">${parseFloat(row['Price']).toFixed(2)}</td>
-                    <td class="text-end fw-bold mono-font">${Math.round(mkVal).toLocaleString()}</td>
-                    <td class="text-end ${getColor(prof)} mono-font">${Math.round(prof).toLocaleString()}</td>
-                    <td class="text-end ${getColor(parsePct(row['Annualized']))}">${formatPct(parsePct(row['Annualized']))}</td>
-                    <td class="text-end text-muted">${yieldPct.toFixed(2)}%</td>
-                    <td class="text-end ${getColor(parsePct(row['Return3Y']))}">${formatPct(parsePct(row['Return3Y']))}</td>
-                </tr>`;
-                tbody.innerHTML += tr;
+                    const tr = `<tr>
+                        <td class="fw-bold text-primary mono-font">${row['Code']}</td>
+                        <td><span class="badge bg-light text-dark border">${type}</span></td>
+                        <td><span class="badge ${freqClass}">${freq}</span></td>
+                        <td class="text-end mono-font">${parseFloat(row['Price']).toFixed(2)}</td>
+                        <td class="text-end fw-bold mono-font">${Math.round(mkVal).toLocaleString()}</td>
+                        <td class="text-end ${getColor(unrealizedProf)} mono-font">${Math.round(unrealizedProf).toLocaleString()}</td>
+                        <td class="text-end ${getColor(parsePct(row['Annualized']))}">${formatPct(parsePct(row['Annualized']))}</td>
+                        <td class="text-end text-muted">${yieldPct.toFixed(2)}%</td>
+                        <td class="text-end ${getColor(parsePct(row['Return3Y']))}">${formatPct(parsePct(row['Return3Y']))}</td>
+                    </tr>`;
+                    tbody.innerHTML += tr;
+                }
             }
         });
 
+        // Update KPIs
         currentTotalAssets = totalMkt;
         document.getElementById('totalAssets').innerText = Math.round(totalMkt).toLocaleString();
         
-        const tp = totalMkt - totalCst;
-        document.getElementById('pnlCard').className = `pro-card border-start border-4 ${tp >= 0 ? 'border-success' : 'border-danger'}`;
-        const profitEl = document.getElementById('totalProfit');
-        profitEl.innerText = Math.round(tp).toLocaleString();
-        profitEl.className = `kpi-value fs-3 fw-bold mono-font ${tp >= 0 ? 'text-success' : 'text-danger'}`;
+        // 總損益 = 未實現 + 已實現
+        const grandTotalProfit = totalUnrealized + totalRealized;
         
-        const tpPct = totalCst > 0 ? (tp/totalCst*100) : 0;
-        const profitPctEl = document.getElementById('profitPct');
-        profitPctEl.innerText = (tp>=0?'+':'') + tpPct.toFixed(2) + '%';
-        profitPctEl.className = `small fw-bold ${tp >= 0 ? 'text-success' : 'text-danger'}`;
+        document.getElementById('pnlCard').className = `pro-card border-start border-4 ${grandTotalProfit >= 0 ? 'border-success' : 'border-danger'}`;
+        
+        const profitEl = document.getElementById('totalProfit');
+        profitEl.innerText = Math.round(grandTotalProfit).toLocaleString();
+        profitEl.className = `kpi-value fs-3 fw-bold mono-font ${grandTotalProfit >= 0 ? 'text-success' : 'text-danger'}`;
+        
+        // 顯示細項
+        document.getElementById('unrealizedProfit').innerText = Math.round(totalUnrealized).toLocaleString();
+        document.getElementById('realizedProfit').innerText = Math.round(totalRealized).toLocaleString();
+        document.getElementById('realizedProfit').className = totalRealized >= 0 ? 'text-success fw-bold' : 'text-danger fw-bold';
 
         document.getElementById('totalDividend').innerText = Math.round(totalDiv).toLocaleString();
         document.getElementById('avgYield').innerText = (totalMkt>0 ? (totalDiv/totalMkt*100) : 0).toFixed(2);
